@@ -1,0 +1,140 @@
+function err=flmm_second_without(N,M);
+
+tau=1/N;
+h=1/M;
+alp=5/10;
+
+
+b1=-(1-alp/2)/(h^2);
+b2=-alp/(2*h^2);
+
+
+
+for i=2:N+1;
+    A(i,i)=-b1;
+    A(i,i-1)=-b2;
+end;
+
+for i=2:N+1;
+    B(i,i)=2*b1;
+    B(i,i-1)=2*b2;
+end;
+B(1,1)=1;
+
+
+F=zeros(N+1,N+1);
+for i=2:N+1;
+    for j=1:i;
+        F(i,i-j+1)=w(j,alp)/(tau^(alp));
+    end;
+end;
+B=B+complex(0,1)*F;
+
+for i=2:N+1;
+    for j=1:i-1;
+    zz(j)=(gamma(2)*w(j,alp)*(i-j+1)^(1+alp))/gamma(2+alp);
+    end;
+    CC(i)=sum(zz)-(1-alp/2)*(i)-(alp/2)*(i-1);
+A(i,2)=A(i,2)+CC(i)*1/(h^2);
+B(i,2)=B(i,2)-CC(i)*2/(h^2);
+end;
+C=A;
+
+fiii=zeros(N+1,M+1);
+
+for i=2:N+1;
+    for j=1:M+1;
+        fiii(i,j)=complex(0,1)*2*(((i-1)*tau)^(2-alp))*sin(pi*(j-1)*h)/gamma(3-alp)-(((i-1)*tau)^2)*(pi^2)*sin(pi*(j-1)*h);
+     fii(i,j)=(1-alp/2)*fiii(i,j)+(alp/2)*fiii(i-1,j);
+ %   fii(i,j)=fiii(i,j)-(alp/2)*fiii(i-1,j);
+    end;
+end;
+
+   
+
+
+
+
+%%%%%%%%%% COMPUTE U %%%%%%%%%%%%%%%%%%%%%%
+%FFF=zeros(N+1,N+1);
+%for i=2:N+1;
+ %   for j=1:i;
+      %  FFF(i,i-j+1)=w(j,-alp);
+  %    FFF(i,i)=1;
+   %   FFF(i,i-1)=-alp/2;
+   % end;
+%end;
+
+
+
+
+for j=1:M+1;
+%fi{j}=FFF*F*fii(:,j);
+fi{j}=fii(:,j);
+ara=fi{j};
+for i=2:N+1;
+    zvar=zeros(i+1,1);
+    for p=1:i-1;
+    zvar(p)=(gamma(2)*w(p,alp)*(i-p+1)^(1+alp))/gamma(2+alp);
+    end;
+    CCC(i)=sum(zvar)-(1-alp/2)*(i)-(alp/2)*(i-1);
+      ara(i)=ara(i)+CCC(i)*ara(2); 
+    
+end;
+fi{j}=ara;
+end;
+
+ 
+
+fi=fi';
+
+alpha{2}=zeros(N+1,N+1);
+betha{2}=zeros(N+1,1);
+for j=2:M;
+    alpha{j+1}=-inv(B+C*alpha{j})*(A);
+    betha{j+1}=inv(B+C*alpha{j})*(fi{j}+(-C)*betha{j});
+end;
+
+%U{M+1}=zeros(N+1,1);
+U{M+1}=zeros(N+1,1);
+
+
+for z=M:-1:1;
+    U{z}=alpha{z+1}*U{z+1}+betha{z+1};
+end;
+
+for z=1:M+1;
+    pp(:,z)=U{z};
+end;
+
+
+
+for i=1:N+1;
+    for j=1:M+1;
+        uex(i,j)=(((i-1)*tau)^2)*sin(pi*(j-1)*h);
+    end;
+end;
+
+a=pp-uex;
+fmat1=abs(a);
+fmat2=fmat1.*fmat1*h;
+fmat3=sum(fmat2,2);
+fmat4=fmat3.^(1/2);
+sumerror1=max(max(abs(a)))
+sumerror2=max(abs(fmat4))
+
+
+
+
+    
+function w=w(j,alp);
+w=(-1)^(j-1)*gamma(alp+1)/gamma(j)/gamma(alp-j+2);
+
+function ww=ww(j,alp);
+ww=((-1)^(j+1))+(j)*((-1)^(j))*alp/2;
+
+function wwww=wwww(j,alp);
+for l=1:j;
+    www(l)=ww(j,alp)*l^(1-alp);
+end;
+wwww=gamma(2-alp)*j/gamma(2)-sum(www);
